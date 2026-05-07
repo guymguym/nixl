@@ -22,6 +22,7 @@
 #if defined HAVE_CUOBJ_CLIENT
 #include "s3_accel/engine_impl.h"
 #include "s3_accel/dell/engine_impl.h"
+#include "s3_accel/ibm/engine_impl.h"
 #endif
 #include <memory>
 
@@ -29,22 +30,26 @@
 // Obj Engine Implementation
 // -----------------------------------------------------------------------------
 
+#if defined HAVE_CUOBJ_CLIENT
+#define MUST_HAVE_CUOBJ_CLIENT(engine)
+#else
+#define MUST_HAVE_CUOBJ_CLIENT(engine) throw std::runtime_error(engine ## " Engine support not available!")
+#endif
+
 // TODO: Consider a registration pattern as more vendor engines are added.
 std::unique_ptr<nixlObjEngineImpl>
 createObjEngineImpl(const nixlBackendInitParams *init_params) {
     if (isDellOBSRequested(init_params->customParams)) {
-#if defined HAVE_CUOBJ_CLIENT
+        MUST_HAVE_CUOBJ_CLIENT("Dell ObjectScale");
         return std::make_unique<S3DellObsObjEngineImpl>(init_params);
-#else
-        throw std::runtime_error("Dell ObjectScale Engine support not available!");
-#endif
+    }
+    if (isIBMStorageScaleRequested(init_params->customParams)) {
+        MUST_HAVE_CUOBJ_CLIENT("IBM Storage Scale");
+        return std::make_unique<S3IBMStorageScaleEngineImpl>(init_params);
     }
     if (isAcceleratedRequested(init_params->customParams)) {
-#if defined HAVE_CUOBJ_CLIENT
+        MUST_HAVE_CUOBJ_CLIENT("Accelerated");
         return std::make_unique<S3AccelObjEngineImpl>(init_params);
-#else
-        throw std::runtime_error("Accelerated Engine support not available!");
-#endif
     }
 
     if (getCrtMinLimit(init_params->customParams) > 0) {
@@ -59,18 +64,16 @@ createObjEngineImpl(const nixlBackendInitParams *init_params,
                     std::shared_ptr<iS3Client> s3_client,
                     std::shared_ptr<iS3Client> s3_client_crt) {
     if (isDellOBSRequested(init_params->customParams)) {
-#if defined HAVE_CUOBJ_CLIENT
+        MUST_HAVE_CUOBJ_CLIENT("Dell ObjectScale");
         return std::make_unique<S3DellObsObjEngineImpl>(init_params, s3_client);
-#else
-        throw std::runtime_error("Dell ObjectScale Engine support not available!");
-#endif
+    }
+    if (isIBMStorageScaleRequested(init_params->customParams)) {
+        MUST_HAVE_CUOBJ_CLIENT("IBM Storage Scale");
+        return std::make_unique<S3IBMStorageScaleEngineImpl>(init_params, s3_client);
     }
     if (isAcceleratedRequested(init_params->customParams)) {
-#if defined HAVE_CUOBJ_CLIENT
+        MUST_HAVE_CUOBJ_CLIENT("Accelerated");
         return std::make_unique<S3AccelObjEngineImpl>(init_params, s3_client);
-#else
-        throw std::runtime_error("Accelerated Engine support not available!");
-#endif
     }
 
     if (getCrtMinLimit(init_params->customParams) > 0) {

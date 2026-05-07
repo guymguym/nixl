@@ -50,5 +50,12 @@ isDellOBSRequested(nixl_b_params_t *custom_params) {
     return type_it != custom_params->end() && type_it->second == "dell";
 }
 
+inline bool
+isIBMStorageScaleRequested(nixl_b_params_t *custom_params) {
+    if (!isAcceleratedRequested(custom_params)) return false;
+    auto type_it = custom_params->find("type");
+    return type_it != custom_params->end() && type_it->second == "ibm";
+}
+
 
 #endif // OBJ_PLUGIN_UTILS_OBJECT_ENGINE_UTILS_H
